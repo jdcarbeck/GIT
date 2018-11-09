@@ -1,9 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
-import qualified GitHub as GH
+import qualified Data.ByteString.Lazy.Char8 as L8
+import Network.HTTP.Simple
 
-main :: IO ()
+import Git
+
+main :: IO()
 main = do
-    possibleUser <- GH.executeRequest' $ GH.userInfoForR "jdcarbeck"
-    print possibleUser
+  httpWithUserAgent >>= putStrLn
+{-
+TODO: Need to make requests to get
+-}
