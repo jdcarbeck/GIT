@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
-import qualified Data.ByteString.Lazy.Char8 as L8
 import Network.HTTP.Simple
 
 import Git
