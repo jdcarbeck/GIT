@@ -4,10 +4,10 @@ module Main (main) where
 import Git
 
 
-main :: IO()
+main :: IO(Maybe a)
 main = do
   response <- query
-  print response
+  return Nothing
 {-
 TODO: Need to make requests to get
 -}
