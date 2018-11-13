@@ -47,17 +47,18 @@ getInfoFromCommits :: [GH.Commit] -> Maybe [CommitInfo]
 getInfoFromCommits [] = Nothing
 
 getCommitAdd :: GH.Commit -> Maybe Int
-getCommitAdd possibleCommit =
-  case (GH.commitStats possibleCommit) of
+getCommitAdd commit =
+  case (GH.commitStats commit) of
     (Nothing) -> Nothing
     (Just addStats) -> Just $ GH.statsAdditions addStats
 
 getCommitSub :: GH.Commit -> Maybe Int
-getCommitSub possibleCommit =
-  case (GH.commitStats possibleCommit) of
+getCommitSub commit =
+  case (GH.commitStats commit) of
     (Nothing) -> Nothing
     (Just subStats) -> Just $ GH.statsDeletions subStats
 
--- getCommitTotal ::
---
+getCommitTotal :: GH.Commit -> Maybe Int
+getCommitTotal commit =
+  case (GH.commitStats commit)
 -- getTimeOfCommit ::
