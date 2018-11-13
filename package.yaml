@@ -1,10 +1,10 @@
-name:                GIT
+name:                GIT-IO
 version:             0.1.0.0
-github:              "jdcarbeck/GIT"
+github:              "githubuser/GIT-IO"
 license:             BSD3
-author:              "John Carbeck"
-maintainer:          "carbeckj@tcd.ie"
-copyright:           "2018 John Carbeck"
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2018 Author name here"
 
 extra-source-files:
 - README.md
@@ -17,23 +17,20 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/GIT#readme>
+description:         Please see the README on GitHub at <https://github.com/githubuser/GIT-IO#readme>
 
 dependencies:
 - base >= 4.7 && < 5
+- github
 - bytestring
-- lens
-- text
-- wreq
-- aeson
-- lens-aeson
-
+- vector
+- time
 
 library:
   source-dirs: src
 
 executables:
-  GIT-exe:
+  GIT-IO-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -41,10 +38,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - GIT
+    - GIT-IO
 
 tests:
-  GIT-test:
+  GIT-IO-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -52,4 +49,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - GIT
+    - GIT-IO

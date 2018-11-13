@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Main (main) where
 
-import Git
+module Main where
 
+import Lib
+import qualified GitHub as GH
 
-main :: IO(Maybe a)
+main :: IO ()
 main = do
-  response <- query
-  return Nothing
-{-
-TODO: Need to make requests to get
--}
+  response <- getAllReposFromOrg
+  case response of
+    (Left error) -> print "Error!\n"
+    (Right resp) -> print $ GH.repoSize (firstOfResponse resp)

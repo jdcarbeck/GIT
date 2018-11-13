@@ -1,3 +1,3 @@
-# Changelog for GIT
+# Changelog for GIT-IO
 
 ## Unreleased changes
