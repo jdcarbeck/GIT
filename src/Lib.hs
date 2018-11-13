@@ -33,5 +33,31 @@ getAllCommits = do
            GH.userReposR "jdcarbeck" GH.RepoPublicityAll GH.FetchAll
   return response
 
-firstOfResponse :: V.Vector a -> a
-firstOfResponse x = head $ V.toList x
+mkCommitInfo :: UTCTime -> Int -> Int -> Int -> CommitInfo
+mkCommitInfo t tl nl dl = CommitInfo { timeOfCommit=t, totalLines=tl
+                                     , newLines=nl, delLines=dl }
+
+toListFromResponse :: (Either GH.Error (V.Vector a)) -> [a]
+toListFromResponse possibleVector =
+  case possibleVector of
+    (Left error) -> []
+    (Right vector) -> V.toList vector
+
+getInfoFromCommits :: [GH.Commit] -> Maybe [CommitInfo]
+getInfoFromCommits [] = Nothing
+
+getCommitAdd :: GH.Commit -> Maybe Int
+getCommitAdd possibleCommit =
+  case (GH.commitStats possibleCommit) of
+    (Nothing) -> Nothing
+    (Just addStats) -> Just $ GH.statsAdditions addStats
+
+getCommitSub :: GH.Commit -> Maybe Int
+getCommitSub possibleCommit =
+  case (GH.commitStats possibleCommit) of
+    (Nothing) -> Nothing
+    (Just subStats) -> Just $ GH.statsDeletions subStats
+
+-- getCommitTotal ::
+--
+-- getTimeOfCommit ::
