@@ -33,9 +33,18 @@ getAllCommits = do
            GH.userReposR "jdcarbeck" GH.RepoPublicityAll GH.FetchAll
   return response
 
-mkCommitInfo :: UTCTime -> Int -> Int -> Int -> CommitInfo
-mkCommitInfo t tl nl dl = CommitInfo { timeOfCommit=t, totalLines=tl
-                                     , newLines=nl, delLines=dl }
+mkCommitInfo :: GH.Commit -> CommitInfo
+mkCommitInfo commit = CommitInfo { timeOfCommit = getTimeOfCommit commit
+                                , totalLines = getCommitTotal commit
+                                , newLines = getCommitAdd commit
+                                , delLines = getCommitSub commit
+                                }
+
+-- getCommitInfo :: Maybe [CommitInfo]
+-- getCommitInfo = do
+--   case (getAllCommits) of
+--     (Left error) -> Nothing
+--     (Right resp) -> Just getInfoFromCommits $ toListFromResponse response
 
 toListFromResponse :: (Either GH.Error (V.Vector a)) -> [a]
 toListFromResponse possibleVector =
@@ -43,22 +52,29 @@ toListFromResponse possibleVector =
     (Left error) -> []
     (Right vector) -> V.toList vector
 
-getInfoFromCommits :: [GH.Commit] -> Maybe [CommitInfo]
-getInfoFromCommits [] = Nothing
+getInfoFromCommits :: [GH.Commit] -> [CommitInfo]
+getInfoFromCommits [] = []
+getInfoFromCommits (x:[]) = (mkCommitInfo x) : []
+getInfoFromCommits (x:xs) = (mkCommitInfo x) : (getInfoFromCommits xs)
 
-getCommitAdd :: GH.Commit -> Maybe Int
+getCommitAdd :: GH.Commit -> Int
 getCommitAdd commit =
   case (GH.commitStats commit) of
-    (Nothing) -> Nothing
-    (Just addStats) -> Just $ GH.statsAdditions addStats
+    (Nothing) -> 0
+    (Just addStats) -> GH.statsAdditions addStats
 
-getCommitSub :: GH.Commit -> Maybe Int
+getCommitSub :: GH.Commit -> Int
 getCommitSub commit =
   case (GH.commitStats commit) of
-    (Nothing) -> Nothing
-    (Just subStats) -> Just $ GH.statsDeletions subStats
+    (Nothing) -> 0
+    (Just subStats) -> GH.statsDeletions subStats
 
-getCommitTotal :: GH.Commit -> Maybe Int
+getCommitTotal :: GH.Commit -> Int
 getCommitTotal commit =
-  case (GH.commitStats commit)
--- getTimeOfCommit ::
+  case (GH.commitStats commit) of
+    (Nothing) -> 0
+    (Just totalStats) -> GH.statsTotal totalStats
+
+getTimeOfCommit :: GH.Commit -> UTCTime
+getTimeOfCommit commit =  GH.gitUserDate (GH.gitCommitAuthor $
+                                          GH.commitGitCommit commit)
