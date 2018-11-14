@@ -27,47 +27,48 @@ data CommitInfo = CommitInfo {
      } deriving (Generic, Show)
 
 --This function is the organisation and repo that is to be analyse
-getAllCommits :: IO (Either GH.Error (V.Vector GH.Repo))
+getAllCommits :: IO (Either GH.Error (V.Vector GH.Commit))
 getAllCommits = do
   response <- GH.executeRequest' {-(getAuth token)-} $
-           GH.userReposR "jdcarbeck" GH.RepoPublicityAll GH.FetchAll
+           GH.commitsForR "jdcarbeck" "guidebot" GH.FetchAll
   return response
+
+func = do
+  response <- getAllCommits
+  case response of
+    (Left error) -> return []
+    (Right commitsList) -> return $ getInfoFromCommits (V.toList commitsList)
+
 
 mkCommitInfo :: GH.Commit -> CommitInfo
 mkCommitInfo commit = CommitInfo { timeOfCommit = getTimeOfCommit commit
-                                , totalLines = getCommitTotal commit
-                                , newLines = getCommitAdd commit
-                                , delLines = getCommitSub commit
+                                , totalLines = getCommitTotal $ GH.commitStats commit
+                                , newLines = getCommitAdd $ GH.commitStats commit
+                                , delLines = getCommitSub $ GH.commitStats commit
                                 }
-
-toListFromResponse :: (Either GH.Error (V.Vector a)) -> [a]
-toListFromResponse possibleVector =
-  case possibleVector of
-    (Left error) -> []
-    (Right vector) -> V.toList vector
 
 getInfoFromCommits :: [GH.Commit] -> [CommitInfo]
 getInfoFromCommits [] = []
 getInfoFromCommits (x:[]) = (mkCommitInfo x) : []
 getInfoFromCommits (x:xs) = (mkCommitInfo x) : (getInfoFromCommits xs)
 
-getCommitAdd :: GH.Commit -> Int
-getCommitAdd commit =
-  case (GH.commitStats commit) of
-    (Nothing) -> 0
-    (Just addStats) -> GH.statsAdditions addStats
+getCommitAdd :: Maybe GH.Stats -> Int
+getCommitAdd stats =
+  case stats of
+    (Nothing) -> 1
+    (Just stats) -> GH.statsAdditions stats
 
-getCommitSub :: GH.Commit -> Int
-getCommitSub commit =
-  case (GH.commitStats commit) of
+getCommitSub :: Maybe GH.Stats -> Int
+getCommitSub stats =
+  case stats of
     (Nothing) -> 0
-    (Just subStats) -> GH.statsDeletions subStats
+    (Just stats) -> GH.statsDeletions stats
 
-getCommitTotal :: GH.Commit -> Int
-getCommitTotal commit =
-  case (GH.commitStats commit) of
+getCommitTotal :: Maybe GH.Stats -> Int
+getCommitTotal stats =
+  case stats of
     (Nothing) -> 0
-    (Just totalStats) -> GH.statsTotal totalStats
+    (Just stats) -> GH.statsTotal stats
 
 getTimeOfCommit :: GH.Commit -> UTCTime
 getTimeOfCommit commit =  GH.gitUserDate (GH.gitCommitAuthor $
