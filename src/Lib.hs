@@ -40,12 +40,6 @@ mkCommitInfo commit = CommitInfo { timeOfCommit = getTimeOfCommit commit
                                 , delLines = getCommitSub commit
                                 }
 
--- getCommitInfo :: Maybe [CommitInfo]
--- getCommitInfo = do
---   case (getAllCommits) of
---     (Left error) -> Nothing
---     (Right resp) -> Just getInfoFromCommits $ toListFromResponse response
-
 toListFromResponse :: (Either GH.Error (V.Vector a)) -> [a]
 toListFromResponse possibleVector =
   case possibleVector of
