@@ -25,6 +25,7 @@ dependencies:
 - bytestring
 - vector
 - time
+- text
 
 library:
   source-dirs: src

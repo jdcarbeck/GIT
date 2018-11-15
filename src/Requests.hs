@@ -6,14 +6,13 @@ module Requests where
 import qualified GitHub as GH
 import qualified Data.ByteString as B
 import qualified Data.Vector as V
+import Data.Text
 import GHC.Generics
 import Data.Time
 import Auth
 
 
---These are the paramerters that will need to change to query different results
-owner = "howtographql"
-repo = "howtographql"
+--These are set by the function requestGitHubStats
 
 data CommitInfo = CommitInfo {
        timeOfCommit :: UTCTime
@@ -22,29 +21,32 @@ data CommitInfo = CommitInfo {
      , delLines :: Int
      } deriving (Generic, Show)
 
-func = do
-  response <- getAllCommits
+requestGitHubStats :: Text -> Text -> IO [CommitInfo]
+requestGitHubStats ownerStr repoStr = do
+  let owner = GH.mkName owner ownerStr
+  let repo = GH.mkName repo repoStr
+  response <- getAllCommits owner repo
   case response of
     (Left error) -> return []
     (Right commitsList) -> do
-      commitInfo <- getInfoFromCommits (V.toList commitsList)
+      commitInfo <- getInfoFromCommits owner repo (V.toList commitsList)
       return commitInfo
 
-getAllCommits :: IO (Either GH.Error (V.Vector GH.Commit))
-getAllCommits = do
+getAllCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> IO (Either GH.Error (V.Vector GH.Commit))
+getAllCommits owner repo = do
   response <- GH.executeRequest getAuth $
               GH.commitsForR owner repo GH.FetchAll
   return response
 
-getInfoFromCommits :: [GH.Commit] -> IO [CommitInfo]
-getInfoFromCommits (x:[]) = do
+getInfoFromCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> [GH.Commit] -> IO [CommitInfo]
+getInfoFromCommits owner repo (x:[]) = do
   logRequestToConsole x
-  stats <- commitStats x
+  stats <- commitStats owner repo x
   return $ (mkCommitInfo x stats) : []
-getInfoFromCommits (x:xs) = do
+getInfoFromCommits owner repo (x:xs) = do
   logRequestToConsole x
-  stats <- commitStats x
-  list <- getInfoFromCommits xs
+  stats <- commitStats owner repo x
+  list <- getInfoFromCommits  owner repo xs
   return $ (mkCommitInfo x stats) : list
 
 logRequestToConsole :: GH.Commit -> IO ()
@@ -59,8 +61,8 @@ mkCommitInfo commit stats = CommitInfo { timeOfCommit = getTimeOfCommit commit
                                         , delLines = (stats!!2)
                                         }
 
-commitStats :: GH.Commit -> IO [Int]
-commitStats commit = do
+commitStats :: GH.Name GH.Owner -> GH.Name GH.Repo -> GH.Commit -> IO [Int]
+commitStats owner repo commit = do
   response <- GH.executeRequest getAuth $ GH.commitR owner repo (GH.commitSha commit)
   case response of
     (Left error) -> return []
