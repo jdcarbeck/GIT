@@ -6,7 +6,8 @@ module Requests where
 import qualified GitHub as GH
 import qualified Data.ByteString as B
 import qualified Data.Vector as V
-import Data.Text
+import qualified Data.Text as T
+
 import GHC.Generics
 import Data.Time
 import Auth
@@ -21,16 +22,17 @@ data CommitInfo = CommitInfo {
      , delLines :: Int
      } deriving (Generic, Show)
 
-requestGitHubStats :: Text -> Text -> IO [CommitInfo]
+requestGitHubStats :: T.Text -> T.Text -> IO (Either GH.Error [CommitInfo])
 requestGitHubStats ownerStr repoStr = do
   let owner = GH.mkName owner ownerStr
   let repo = GH.mkName repo repoStr
   response <- getAllCommits owner repo
   case response of
-    (Left error) -> return []
+    (Left error) -> return $ Left error
     (Right commitsList) -> do
-      commitInfo <- getInfoFromCommits owner repo (V.toList commitsList)
-      return commitInfo
+      let list = (V.toList commitsList)
+      commitInfo <- getInfoFromCommits owner repo list
+      return $ Right commitInfo
 
 getAllCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> IO (Either GH.Error (V.Vector GH.Commit))
 getAllCommits owner repo = do
@@ -46,7 +48,7 @@ getInfoFromCommits owner repo (x:[]) = do
 getInfoFromCommits owner repo (x:xs) = do
   logRequestToConsole x
   stats <- commitStats owner repo x
-  list <- getInfoFromCommits  owner repo xs
+  list <- getInfoFromCommits owner repo xs
   return $ (mkCommitInfo x stats) : list
 
 logRequestToConsole :: GH.Commit -> IO ()
