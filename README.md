@@ -6,10 +6,14 @@ This project requires the addition of `Auth.hs` in the src directory. This file
 should contain the following code, where the two strings are replaced with your
 username and password for github.com:
  ```Haskell
+ {-# LANGUAGE OverloadedStrings #-}
  module Auth where
 
  import qualified GitHub as GH
 
+ username = "username"
+ password = "password"
+
  getAuth :: GH.Auth
- getAuth = GH.BasicAuth "USERNAME" "PASSWORD"
+ getAuth = GH.BasicAuth username password
  ```

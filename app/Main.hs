@@ -2,7 +2,8 @@
 
 module Main where
 
-import Lib
-import qualified GitHub as GH
+import Requests
+import System.Environment
 
-main = func
+main = do
+  args <- getArgs

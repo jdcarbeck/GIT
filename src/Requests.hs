@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Lib where
+module Requests where
 
 import qualified GitHub as GH
 import qualified Data.ByteString as B
@@ -10,15 +10,6 @@ import GHC.Generics
 import Data.Time
 import Auth
 
-{-
-getAuth :: B.ByteString -> GH.Auth
-getAuth token = GH.OAuth token
-
-getToken :: IO B.ByteString
-getToken = do
-  token <- B.readFile "./githubToken.txt"
-  return token
--}
 
 --These are the paramerters that will need to change to query different results
 owner = "howtographql"
@@ -47,20 +38,20 @@ getAllCommits = do
 
 getInfoFromCommits :: [GH.Commit] -> IO [CommitInfo]
 getInfoFromCommits (x:[]) = do
-  logToConsole x
+  logRequestToConsole x
   stats <- commitStats x
   return $ (mkCommitInfo x stats) : []
 getInfoFromCommits (x:xs) = do
-  logToConsole x
+  logRequestToConsole x
   stats <- commitStats x
   list <- getInfoFromCommits xs
   return $ (mkCommitInfo x stats) : list
 
-logToConsole :: GH.Commit -> IO ()
-logToConsole commit = do
+logRequestToConsole :: GH.Commit -> IO ()
+logRequestToConsole commit = do
   putStrLn $ "Request for commit: " ++ (show $ GH.untagName (GH.commitSha commit))
 
-
+--TODO: need to implement error handling error where stat is just an empty list
 mkCommitInfo :: GH.Commit -> [Int] -> CommitInfo
 mkCommitInfo commit stats = CommitInfo { timeOfCommit = getTimeOfCommit commit
                                         , newLines = (stats!!0)
