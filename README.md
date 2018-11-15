@@ -3,7 +3,7 @@ This project looks at commits for a given repository and gives a graph displayin
 the code churn and efficiency over time.
 
 ## Setup before running
-This project requires the addition of `Auth.hs` in the `./src` directory. This file
+This project requires the addition of `Auth.hs` in the `./GIT-IO/src` directory. This file
 should contain the following code, where the two strings are replaced with your
 username and password for github.com:
  ```Haskell
