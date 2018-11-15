@@ -4,8 +4,10 @@ module Main where
 
 import Requests
 import System.Environment
+import System.IO
 import qualified GitHub as GH
 import qualified Data.Text as T
+import Data.Aeson
 
 main = do
   args <- getArgs
@@ -15,12 +17,11 @@ main = do
       response <- requestGitHubStats (T.pack (args!!1)) (T.pack (args!!2))
       case response of
         (Left error) -> putStrLn $ show error
-        (Right response) -> putStrLn $ show response
+        (Right response) -> do
+          encodeFile (getFilePath (args!!2)) response
       return response
 
 
-
-{-
-  What I want to do before moving on to d3js
-   -TODO: output to JSON file that can be read to d3.js
--}
+getFilePath :: String -> FilePath
+getFilePath repo = "../data/" ++ repo ++ "_data.json"
+  --TODO: output to JSON file that can be read to d3.js

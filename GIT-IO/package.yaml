@@ -26,6 +26,7 @@ dependencies:
 - vector
 - time
 - text
+- aeson
 
 library:
   source-dirs: src

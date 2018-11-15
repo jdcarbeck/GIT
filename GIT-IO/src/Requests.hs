@@ -9,11 +9,9 @@ import qualified Data.Vector as V
 import qualified Data.Text as T
 
 import GHC.Generics
+import Data.Aeson
 import Data.Time
 import Auth
-
-
---These are set by the function requestGitHubStats
 
 data CommitInfo = CommitInfo {
        timeOfCommit :: UTCTime
@@ -21,6 +19,8 @@ data CommitInfo = CommitInfo {
      , newLines :: Int
      , delLines :: Int
      } deriving (Generic, Show)
+
+instance ToJSON CommitInfo
 
 requestGitHubStats :: T.Text -> T.Text -> IO (Either GH.Error [CommitInfo])
 requestGitHubStats ownerStr repoStr = do
@@ -55,7 +55,6 @@ logRequestToConsole :: GH.Commit -> IO ()
 logRequestToConsole commit = do
   putStrLn $ "Request for commit: " ++ (show $ GH.untagName (GH.commitSha commit))
 
---TODO: need to implement error handling error where stat is just an empty list
 mkCommitInfo :: GH.Commit -> [Int] -> CommitInfo
 mkCommitInfo commit stats = CommitInfo { timeOfCommit = getTimeOfCommit commit
                                         , newLines = (stats!!0)
