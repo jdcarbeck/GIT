@@ -18,10 +18,9 @@ main = do
       case response of
         (Left error) -> putStrLn $ show error
         (Right response) -> do
-          encodeFile (getFilePath (args!!2)) response
+          encodeFile (getFilePath (args!!1) (args!!2)) response
       return response
 
 
-getFilePath :: String -> FilePath
-getFilePath repo = "../data/" ++ repo ++ "_data.json"
-  --TODO: output to JSON file that can be read to d3.js
+getFilePath :: String -> String -> FilePath
+getFilePath owner repo = "../data/" ++ owner ++ "_" ++ repo ++ "_data.json"
