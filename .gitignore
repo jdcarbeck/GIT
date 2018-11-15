@@ -1,4 +1,4 @@
 .stack-work/
 GIT-IO.cabal
-githubToken.txt
+Auth.hs
 *~
