@@ -1,5 +1,5 @@
 #!/bin/sh
-printf "\033[1;31mRunning Commit Visualisation 2018 John Carbeck\033[0m\n"
+printf "\033[1;31mRunning Commit Visualisation\033[0;31m\n2018 John Carbeck\033[0m\n"
 if [ "$#" -eq 2 ]
 then
   cd data
@@ -13,5 +13,5 @@ then
   cd ../
 fi
 python -mwebbrowser http://localhost:8080
-printf "\033[0;34mServer Started at http://localhost:8080 ctrl c to quit\033[0m\n"
+printf "\033[0;34mServer Started at http://localhost:8080 \nctrl c to quit\033[0m\n"
 python -m SimpleHTTPServer 8080
