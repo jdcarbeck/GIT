@@ -73,7 +73,7 @@ getStats :: Maybe GH.Stats -> [Int]
 getStats stats =
   case stats of
      (Nothing) -> (0:0:0:[])
-     (Just stats) -> ((GH.statsAdditions stats):(GH.statsTotal stats):(GH.statsTotal stats):[])
+     (Just stats) -> ((GH.statsAdditions stats):(GH.statsTotal stats):(GH.statsDeletions stats):[])
 
 getTimeOfCommit :: GH.Commit -> UTCTime
 getTimeOfCommit commit =  GH.gitUserDate (GH.gitCommitAuthor $
