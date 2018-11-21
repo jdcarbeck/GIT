@@ -21,11 +21,12 @@ var svg = d3.select("body").append("svg")
 d3.json("/data/jdcarbeck_git_data.json").then(function(data){
   data.forEach(function(d){
     d.timeOfCommit = parseTime(d.timeOfCommit);
-    d.churn = (Math.round((d.delLines/d.totalLines)*100));
-  });
-
-  data.forEach(function(d){
-      console.log(d.churn);
+    if(d.totalLines > 0){
+      d.churn = (Math.round((d.delLines/d.totalLines)*100));
+    }
+    else {
+      console.log(d);
+    }
   });
 
 
