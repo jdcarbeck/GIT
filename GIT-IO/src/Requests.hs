@@ -41,26 +41,33 @@ getAllCommits owner repo = do
   return response
 
 getInfoFromCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> [GH.Commit] -> IO [CommitInfo]
+getInfoFromCommits owner repo ([]) = return []
 getInfoFromCommits owner repo (x:[]) = do
   logRequestToConsole x
   stats <- commitStats owner repo x
-  return $ (mkCommitInfo x stats) : []
+  case (mkCommitInfo x stats) of
+    (Nothing) -> return []
+    (Just commitInfo) -> return $ commitInfo : []
 getInfoFromCommits owner repo (x:xs) = do
   logRequestToConsole x
   stats <- commitStats owner repo x
   list <- getInfoFromCommits owner repo xs
-  return $ (mkCommitInfo x stats) : list
+  case (mkCommitInfo x stats) of
+    (Nothing) -> return list
+    (Just commitInfo) -> return $ commitInfo : list
 
 logRequestToConsole :: GH.Commit -> IO ()
 logRequestToConsole commit = do
   putStrLn $ "Request for commit: " ++ (show $ GH.untagName (GH.commitSha commit))
 
-mkCommitInfo :: GH.Commit -> [Int] -> CommitInfo
-mkCommitInfo commit stats = CommitInfo { timeOfCommit = getTimeOfCommit commit
-                                        , newLines = (stats!!0)
-                                        , totalLines = (stats!!1)
-                                        , delLines = (stats!!2)
-                                        }
+mkCommitInfo :: GH.Commit -> [Int] -> Maybe CommitInfo
+mkCommitInfo commit stats =
+  case (stats!!1 == 0) of
+    (True) -> Nothing
+    (False) -> Just CommitInfo { timeOfCommit = getTimeOfCommit commit
+                          , newLines = (stats!!0)
+                          , totalLines = (stats!!1)
+                          , delLines = (stats!!2)}
 
 commitStats :: GH.Name GH.Owner -> GH.Name GH.Repo -> GH.Commit -> IO [Int]
 commitStats owner repo commit = do
