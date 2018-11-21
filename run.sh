@@ -13,5 +13,6 @@ then
   printf "\033[0;34mDone\033[0m\n"
   cd ../
 fi
+python -mwebbrowser http://localhost:8080
 printf "\033[0;34mServer Started at http://localhost:8080 \nctrl c to quit\033[0m\n"
 python -m SimpleHTTPServer 8080
