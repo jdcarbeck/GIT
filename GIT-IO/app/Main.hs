@@ -14,7 +14,7 @@ main = do
   let argCount = length args
   case (argCount == 3) of
     (True) -> do
-      response <- requestGitHubStats (T.pack (args!!1)) (T.pack (args!!2))
+      response <- requestGitHubStats (args!!1) (args!!2)
       case response of
         (Left error) -> putStrLn $ show error
         (Right response) -> do
