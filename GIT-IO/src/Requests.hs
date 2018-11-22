@@ -5,6 +5,7 @@ module Requests where
 
 import qualified GitHub as GH
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B8
 import qualified Data.Vector as V
 import qualified Data.Text as T
 
@@ -12,6 +13,14 @@ import GHC.Generics
 import Data.Aeson
 import Data.Time
 import Auth
+
+data CommitData = CommitData {
+      user :: T.Text
+    , repo :: T.Text
+    , commits :: [CommitInfo]
+    } deriving (Generic, Show)
+
+instance ToJSON CommitData
 
 data CommitInfo = CommitInfo {
        timeOfCommit :: UTCTime
@@ -22,17 +31,20 @@ data CommitInfo = CommitInfo {
 
 instance ToJSON CommitInfo
 
-requestGitHubStats :: T.Text -> T.Text -> IO (Either GH.Error [CommitInfo])
+requestGitHubStats :: String -> String -> IO (Either GH.Error CommitData)
 requestGitHubStats ownerStr repoStr = do
-  let owner = GH.mkName owner ownerStr
-  let repo = GH.mkName repo repoStr
+  let owner = GH.mkName owner (T.pack(ownerStr))
+  let repo = GH.mkName repo (T.pack(repoStr))
   response <- getAllCommits owner repo
   case response of
     (Left error) -> return $ Left error
     (Right commitsList) -> do
       let list = (V.toList commitsList)
       commitInfo <- getInfoFromCommits owner repo list
-      return $ Right commitInfo
+      let commitData = CommitData { user = (T.pack(ownerStr))
+                                  , repo = (T.pack(repoStr))
+                                  , commits = commitInfo }
+      return $ Right commitData
 
 getAllCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> IO (Either GH.Error (V.Vector GH.Commit))
 getAllCommits owner repo = do
