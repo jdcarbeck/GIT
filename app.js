@@ -7,14 +7,16 @@ var margin = {top: 20, right: 20, bottom: 100, left: 50},
     gridSize = Math.floor(width / 24),
     legendElementWidth = gridSize*2,
     buckets = 9,
-    colors = [ "#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    colors = [ "#000000","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+    days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     times = [ "01", "02", "03", "04", "05", "06"
             , "07", "08", "09", "10", "11", "12"
             , "13", "14", "15", "16", "17", "18"
             , "19", "20", "21", "22", "23", "24"];
 
-var parseTime = d3.utcParse("%Y-%m-%dT%H:%M:%SZ");
+
+var title =  d3.select("body").append("h1")
+      .style("font-size", "32px");
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -51,6 +53,35 @@ var avgChurn = 0;
 var avgCommit = 0;
 var totalCommits = 0;
 
-d3.json("/data/jdcarbeck_git_data.json").then(function(data){
-  
+d3.json("/data/GitSquared_edex-ui_data.json").then(function(data){
+
+  var cards = svg.selectAll(".hour")
+      .data(data.commits, function(d){
+        var dt = new Date(Date.parse(d.timeOfCommit));
+        var day = dt.getDay();
+        var hr = dt.getHours();
+        return day+':'+hr;
+      });
+
+  cards.append("title");
+
+  cards.enter().append("rect")
+        .attr("y", function(d){
+          var dt = new Date(Date.parse(d.timeOfCommit));
+          var day = dt.getDay();
+          return ((day) * gridSize);
+        })
+        .attr("x", function(d){
+          var dt = new Date(Date.parse(d.timeOfCommit));
+          var hr = dt.getHours();
+          return ((hr) * gridSize);
+        })
+        .attr("class", "hour")
+        .attr("width", gridSize)
+        .attr("height", gridSize)
+        .style("fill", colors[0])
+        .style("opacity", 0.2);
+
+
+        title.text(function(d){return data.user + "/" + data.repo;});
 });
