@@ -1,6 +1,5 @@
 # GIT-IO
-This project looks at commits for a given repository and gives a graph displaying
-the code churn and efficiency over time.
+This project looks at commits for a user displaying the users active hours across all their repos.
 
 ## Setup before running
 This project requires the addition of `Auth.hs` in the `./GIT-IO/src` directory. This file
@@ -20,6 +19,5 @@ username and password for github.com:
  ```
 
  ## Running the project
- To run the project simple run `./run.sh {USER/ORG} {REPO}`
- where the user or org is the owner of the repo and the repo is the name of the
- repo that the commit information needs to be collected on
+ To run the project on a user `./run.sh u {USERNAME}` or for an organisation `./run.sh org {ORG}`
+ To run the project with the data previously collected run `./run.sh`

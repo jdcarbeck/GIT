@@ -6,16 +6,13 @@ var margin = {top: 20, right: 20, bottom: 100, left: 50},
     height = HEIGHT - margin.top - margin.bottom;
     gridSize = Math.floor(width / 24),
     legendElementWidth = gridSize*2,
-    buckets = 9,
-    colors = [ "#18A993","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+    buckets = 8,
+    colors = ["#081d58","#253494","#225ea8","#1d91c0","#41b6c4","#7fcdbb","#c7e9b4","#edf8b1"], // alternatively colorbrewer.YlGnBu[9]
     days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
     times = [ "01", "02", "03", "04", "05", "06"
             , "07", "08", "09", "10", "11", "12"
             , "13", "14", "15", "16", "17", "18"
             , "19", "20", "21", "22", "23", "24"];
-
-var t = d3.transition()
-    .duration(750)
 
 var title =  d3.select("body").append("h1")
       .style("font-size", "2em")
@@ -52,38 +49,78 @@ var timeLabels = svg.selectAll(".timeLabel")
         return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis");
       });
 
-var avgChurn = 0;
-var avgCommit = 0;
-var totalCommits = 0;
-
-d3.json("/data/GitSquared_edex-ui_data.json").then(function(data){
-
-  title.text(function(d){return data.user + "/" + data.repo;});
-
-  var cards = svg.selectAll(".hour")
-      .data(data.commits, function(d){
-        var dt = new Date(Date.parse(d.timeOfCommit));
-        var day = dt.getDay();
-        var hr = dt.getHours();
-        return day+':'+hr;
+var gridData = function gridData(){
+  var data = new Array();
+  for(var row = 0; row < 7; row++){
+    data.push( new Array() );
+    for(var col = 0; col < 24; col++){
+      data[row].push({
+        commits: 0,
+        x: col,
+        y: row
       });
+    }
+  }
+  return data;
+}
 
-  cards.append("title");
+var totalCommits = 0;
+var maxCommits = 0;
 
-  cards.enter().append("rect")
-        .attr("y", function(d){
-          var dt = new Date(Date.parse(d.timeOfCommit));
-          var day = dt.getDay();
-          return (((day) * gridSize));
-        })
-        .attr("x", function(d){
-          var dt = new Date(Date.parse(d.timeOfCommit));
-          var hr = dt.getHours();
-          return (((hr) * gridSize));
-        })
-        .attr("class", "hour")
-        .attr("width", gridSize)
-        .attr("height", gridSize)
-        .style("opacity", 0.1)
-        .style("fill", colors[0]);
+d3.json("/data/data.json").then(function(data){
+
+  title.text(function(d){ return data.user });
+
+  var grid = gridData();
+
+  data.commits.forEach(function(d){
+    var dt = new Date(Date.parse(d.timeOfCommit));
+    var day = dt.getDay();
+    var hr = dt.getHours();
+    totalCommits++;
+    grid[day][hr].commits++;
+    if(grid[day][hr].commits > maxCommits)
+      maxCommits = grid[day][hr].commits;
+  });
+
+  var colorScale = d3.scaleQuantile()
+      .domain([0, buckets-1, maxCommits])
+      .range(colors);
+
+  var commitData = svg.selectAll(".hour")
+      .data(grid)
+      .enter()
+      .selectAll(".hour")
+      .data(function(d){ return d; })
+      .enter().append("rect")
+      .attr("x", function(d){ return (d.x * gridSize) + 1 })
+      .attr("y", function(d){ return (d.y * gridSize) + 1})
+      .attr("rx", 3)
+      .attr("ry", 3)
+      .attr("width", gridSize - 2)
+      .attr("height", gridSize - 2)
+      .style("opacity", 1)
+      .style("fill", function(d){
+        if(d.commits == 0) return "#dddddd";
+        else return colorScale(d.commits); });
+
+  var legend = svg.selectAll(".legend")
+      .data([1].concat(colorScale.quantiles()), function(d){ return d; })
+      .enter().append("g")
+      .attr("class", "legend")
+
+  legend.append("rect")
+    .attr("x", function(d, i) { return legendElementWidth * i; })
+    .attr("y", height)
+    .attr("width", legendElementWidth)
+    .attr("height", gridSize / 2)
+    .style("fill", function(d, i) { return colors[i]; })
+
+  legend.append("text")
+    .attr("class", "mono")
+    .text(function(d) { return "≥ " + Math.ceil(d); })
+    .attr("x", function(d, i) { return legendElementWidth * i; })
+    .attr("y", height + gridSize);
+
+  console.log(totalCommits);
 });

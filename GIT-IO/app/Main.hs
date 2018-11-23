@@ -18,9 +18,5 @@ main = do
       case response of
         (Left error) -> putStrLn $ show error
         (Right response) -> do
-          encodeFile (getFilePath (args!!2)) response
+          encodeFile "../data/data.json" response
       return response
-
-
-getFilePath :: String -> FilePath
-getFilePath owner = "../data/" ++ owner ++ "_data.json"
