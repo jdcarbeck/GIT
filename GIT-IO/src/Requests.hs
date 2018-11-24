@@ -16,7 +16,6 @@ import Auth
 
 data CommitData = CommitData {
       user :: T.Text
-    , repo :: T.Text
     , commits :: [CommitInfo]
     } deriving (Generic, Show)
 
@@ -24,75 +23,78 @@ instance ToJSON CommitData
 
 data CommitInfo = CommitInfo {
        timeOfCommit :: UTCTime
-     , totalLines :: Int
-     , newLines :: Int
-     , delLines :: Int
      } deriving (Generic, Show)
 
 instance ToJSON CommitInfo
 
-requestGitHubStats :: String -> String -> IO (Either GH.Error CommitData)
-requestGitHubStats ownerStr repoStr = do
-  let owner = GH.mkName owner (T.pack(ownerStr))
-  let repo = GH.mkName repo (T.pack(repoStr))
-  response <- getAllCommits owner repo
-  case response of
-    (Left error) -> return $ Left error
-    (Right commitsList) -> do
-      let list = (V.toList commitsList)
-      commitInfo <- getInfoFromCommits owner repo list
-      let commitData = CommitData { user = (T.pack(ownerStr))
-                                  , repo = (T.pack(repoStr))
-                                  , commits = commitInfo }
-      return $ Right commitData
+requestGitHubStats :: String -> Bool -> IO (Either GH.Error CommitData)
+requestGitHubStats ownerStr isOrg = do
+  case isOrg of
+    (True) -> do
+      let organization = GH.mkName organization (T.pack(ownerStr))
+      response <- getOrgRepos organization
+      case response of
+        (Left error) -> return $ Left error
+        (Right repos) -> do
+          putStrLn "here"
+          commitData <- commitDataFromRepos (V.toList repos) ownerStr
+          return $ Right commitData
+    (False) -> do
+      let owner = GH.mkName owner (T.pack(ownerStr))
+      response <- getUserRepos owner
+      case response of
+        (Left error) -> return $ Left error
+        (Right repos) -> do
+          commitData <- commitDataFromRepos (V.toList repos) ownerStr
+          return $ Right commitData
 
-getAllCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> IO (Either GH.Error (V.Vector GH.Commit))
-getAllCommits owner repo = do
+commitDataFromRepos :: [GH.Repo] -> String -> IO CommitData
+commitDataFromRepos repos owner = do
+  commitsFromRepos <- getInfoFromRepoList repos owner
+  return CommitData { user = T.pack(owner)
+                    , commits = commitsFromRepos}
+
+getInfoFromRepoList :: [GH.Repo] -> String -> IO [CommitInfo]
+getInfoFromRepoList ([]) ownerStr = return []
+getInfoFromRepoList (x:[]) ownerStr = do
+  let owner = GH.mkName owner (T.pack ownerStr)
+  commits <- getRepoCommits owner (GH.repoName x)
+  case commits of
+    (Left error) -> return []
+    (Right commits) -> return (getInfoFromCommits (V.toList commits))
+getInfoFromRepoList (x:xs) ownerStr = do
+  let owner = GH.mkName owner (T.pack(ownerStr))
+  list <- getInfoFromRepoList xs ownerStr
+  commits <- getRepoCommits owner (GH.repoName x)
+  case commits of
+    (Left error) -> return list
+    (Right commits) -> return ((getInfoFromCommits (V.toList commits)) ++ list)
+
+getInfoFromCommits :: [GH.Commit] -> [CommitInfo]
+getInfoFromCommits [] = []
+getInfoFromCommits (x:[]) = ((mkCommitInfo x):[])
+getInfoFromCommits (x:xs) = ((mkCommitInfo x):(getInfoFromCommits xs))
+
+getUserRepos :: GH.Name GH.Owner -> IO (Either GH.Error (V.Vector GH.Repo))
+getUserRepos owner = do
+  response <- GH.executeRequest getAuth $
+              GH.userReposR owner GH.RepoPublicityPublic GH.FetchAll
+  return response
+
+getOrgRepos :: GH.Name GH.Organization -> IO (Either GH.Error (V.Vector GH.Repo))
+getOrgRepos org = do
+  response <- GH.executeRequest getAuth $
+              GH.organizationReposR org GH.RepoPublicityPublic GH.FetchAll
+  return response
+
+getRepoCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> IO (Either GH.Error (V.Vector GH.Commit))
+getRepoCommits owner repo = do
   response <- GH.executeRequest getAuth $
               GH.commitsForR owner repo GH.FetchAll
   return response
 
-getInfoFromCommits :: GH.Name GH.Owner -> GH.Name GH.Repo -> [GH.Commit] -> IO [CommitInfo]
-getInfoFromCommits owner repo ([]) = return []
-getInfoFromCommits owner repo (x:[]) = do
-  logRequestToConsole x
-  stats <- commitStats owner repo x
-  case (mkCommitInfo x stats) of
-    (Nothing) -> return []
-    (Just commitInfo) -> return $ commitInfo : []
-getInfoFromCommits owner repo (x:xs) = do
-  logRequestToConsole x
-  stats <- commitStats owner repo x
-  list <- getInfoFromCommits owner repo xs
-  case (mkCommitInfo x stats) of
-    (Nothing) -> return list
-    (Just commitInfo) -> return $ commitInfo : list
-
-logRequestToConsole :: GH.Commit -> IO ()
-logRequestToConsole commit = do
-  putStrLn $ "Request for commit: " ++ (show $ GH.untagName (GH.commitSha commit))
-
-mkCommitInfo :: GH.Commit -> [Int] -> Maybe CommitInfo
-mkCommitInfo commit stats =
-  case (stats!!1 == 0) of
-    (True) -> Nothing
-    (False) -> Just CommitInfo { timeOfCommit = getTimeOfCommit commit
-                          , newLines = (stats!!0)
-                          , totalLines = (stats!!1)
-                          , delLines = (stats!!2)}
-
-commitStats :: GH.Name GH.Owner -> GH.Name GH.Repo -> GH.Commit -> IO [Int]
-commitStats owner repo commit = do
-  response <- GH.executeRequest getAuth $ GH.commitR owner repo (GH.commitSha commit)
-  case response of
-    (Left error) -> return []
-    (Right commit) -> return $ getStats (GH.commitStats commit)
-
-getStats :: Maybe GH.Stats -> [Int]
-getStats stats =
-  case stats of
-     (Nothing) -> (0:0:0:[])
-     (Just stats) -> ((GH.statsAdditions stats):(GH.statsTotal stats):(GH.statsDeletions stats):[])
+mkCommitInfo :: GH.Commit -> CommitInfo
+mkCommitInfo commit = CommitInfo { timeOfCommit = getTimeOfCommit commit}
 
 getTimeOfCommit :: GH.Commit -> UTCTime
 getTimeOfCommit commit =  GH.gitUserDate (GH.gitCommitAuthor $
