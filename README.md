@@ -1,6 +1,6 @@
 # GIT-IO
 This project looks at commits for a user displaying the users active hours across all their repos.
-
+![alt text](https://raw.githubusercontent.com/jdcarbeck/git/master/img.png)
 ## Setup before running
 This project requires the addition of `Auth.hs` in the `./GIT-IO/src` directory. This file
 should contain the following code, where the two strings are replaced with your
