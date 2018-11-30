@@ -20,3 +20,6 @@ username and password for github.com:
  ## Running the project
  To run the project on a user `./run.sh u {USERNAME}` or for an organisation `./run.sh org {ORG}`
  To run the project with the data previously collected run `./run.sh`
+ Then go to a browser and go to http://localhost:8000
+
+**It should be noted that the project has long runtimes for organisations and users with a long commit history**
